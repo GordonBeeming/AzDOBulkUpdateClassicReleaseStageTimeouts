@@ -26,7 +26,7 @@ jobs:
         echo "$buildNumber"
         projContent=$(sed "s+<Version>[0-9][0-9]*.*[0-9]*.*[0-9]*.*</Version>+<Version>$buildNumber</Version>+g" AzDOBulkUpdateClassicReleaseStageTimeouts.csproj)
         echo "$projContent" > AzDOBulkUpdateClassicReleaseStageTimeouts.csproj
-        echo "::workflow-command BUILD_NUMBER=$buildNumber"
+        echo "::set-output BUILD_NUMBER=$buildNumber"
       working-directory: AzDOBulkUpdateClassicReleaseStageTimeouts
     
     - name: Install dependencies
