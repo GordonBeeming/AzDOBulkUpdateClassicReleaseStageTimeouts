@@ -42,11 +42,10 @@ jobs:
       run: dotnet publish --configuration Release --no-restore --no-build --output "../package" --verbosity normal /nologo /property:GenerateFullPaths=true -p:UseAppHost=true
       working-directory: AzDOBulkUpdateClassicReleaseStageTimeouts
 
-    - name: Archive Release
-      uses: thedoctor0/zip-release@master
+    - uses: papeloto/action-zip@v1
       with:
-        filename: 'release.zip'
-        directory: 'package'
+        files: package/
+        dest: release.zip
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
