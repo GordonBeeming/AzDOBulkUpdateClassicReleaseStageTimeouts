@@ -42,6 +42,12 @@ jobs:
       run: dotnet publish --configuration Release --no-restore --no-build --output "../package" --verbosity normal /nologo /property:GenerateFullPaths=true -p:UseAppHost=true
       working-directory: AzDOBulkUpdateClassicReleaseStageTimeouts
 
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: 'release.zip'
+        directory: 'package'
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/heads/main')
@@ -52,4 +58,4 @@ jobs:
         name: Release ${{ steps.update-version.outputs.BUILD_NUMBER }}
         tag_name: ${{ steps.update-version.outputs.BUILD_NUMBER }}
         files: |
-          package/**
+          package/release.zip
