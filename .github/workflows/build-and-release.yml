@@ -23,9 +23,9 @@ jobs:
         buildId=$GITHUB_RUN_NUMBER
         buildNumber="$buildDateNumber.$buildId"
         echo "$buildNumber"
-        projContent=$(sed "s+<Version>[0-9][0-9]*.*[0-9]*.*[0-9]*.*</Version>+<Version>$buildNumber</Version>+g" HostedApp.csproj)
-        echo "$projContent" > HostedApp.csproj
-      working-directory: src/HostedApp
+        projContent=$(sed "s+<Version>[0-9][0-9]*.*[0-9]*.*[0-9]*.*</Version>+<Version>$buildNumber</Version>+g" AzDOBulkUpdateClassicReleaseStageTimeouts.csproj)
+        echo "$projContent" > AzDOBulkUpdateClassicReleaseStageTimeouts.csproj
+      working-directory: AzDOBulkUpdateClassicReleaseStageTimeouts
     
     - name: Install dependencies
       run: dotnet restore /nologo
