@@ -52,4 +52,4 @@ jobs:
         name: Release ${{ steps.update-version.outputs.BUILD_NUMBER }}
         tag_name: ${{ steps.update-version.outputs.BUILD_NUMBER }}
         files: |
-          package/*.*
+          package/**
