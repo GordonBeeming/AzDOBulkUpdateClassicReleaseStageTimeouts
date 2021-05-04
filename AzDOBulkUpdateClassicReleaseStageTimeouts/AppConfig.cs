@@ -1,19 +1,38 @@
-﻿namespace AzDOBulkUpdateClassicReleaseStageTimeouts
+﻿using System.Collections.Generic;
+
+namespace AzDOBulkUpdateClassicReleaseStageTimeouts
 {
   public class AppConfig
   {
-    public string SourceTeamProjectBaseUri { get; set; }
-    public string TargetTeamProjectBaseUri { get; set; }
-    public string SourcePatKey { get; set; }
-    public string TargetPatKey { get; set; }
+    public RunModes RunMode { get; set; } = RunModes.ListPipelines;
 
-    public string SourceTeamName { get; set; }
-    public string SourceDashboardName { get; set; }
-    public bool SourceAsProject { get; set; }
+    public string OrgName { get; set; }
+    public string ProjectName { get; set; }
+    public string PatKey { get; set; }
 
-    public string TargetTeamName { get; set; }
-    public string TargetDashboardName { get; set; }
-    public bool TargetAsProject { get; set; }
+    public ListPipelines ListPipelines { get; set; } = new ListPipelines();
+
+    public UpdateTimeoutFor UpdateTimeoutFor { get; set; } = new UpdateTimeoutFor();
+
   }
 
+  public class ListPipelines
+  {
+    public string searchText { get; set; }
+    public bool searchTextContainsFolderName { get; set; }
+    public bool isExactNameMatch { get; set; }
+  }
+
+  public class UpdateTimeoutFor
+  {
+    public int TimeoutInMinutes { get; set; } = 0;
+
+    public List<UpdateTimeoutFor_Definition> Definitions { get; set; } = new List<UpdateTimeoutFor_Definition>();
+  }
+
+  public class UpdateTimeoutFor_Definition
+  {
+    public string FullName { get; set; }
+    public List<string> Environments { get; set; } = new List<string>();
+  }
 }

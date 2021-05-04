@@ -11,11 +11,18 @@ namespace AzDOBulkUpdateClassicReleaseStageTimeouts
 
   public static class TfsStatic
   {
+    public const string Standard_Org_UrlFormat = "https://dev.azure.com/{0}";
+    public const string Standard_Project_UrlFormat = Standard_Org_UrlFormat + "/{1}";
+
+    public const string ReleaseManager_Org_UrlFormat = "https://vsrm.dev.azure.com/{0}";
+    public const string ReleaseManager_Project_UrlFormat = ReleaseManager_Org_UrlFormat + "/{1}";
+
     #region core
 
     public const string BOOOOOOOM = "BOOOOOOOM!";
-    public static string PatKey = string.Empty;
-    public static string TeamProjectBaseUri = string.Empty;
+    public static string PatKey { get; set; } = string.Empty;
+    public static string OrgName { get; set; } = string.Empty;
+    public static string ProjectName { get; set; } = string.Empty;
 
     private static string GetAuthorizationHeader() => $"Basic {Convert.ToBase64String(Encoding.ASCII.GetBytes($":{PatKey}"))}";
 
@@ -32,6 +39,10 @@ namespace AzDOBulkUpdateClassicReleaseStageTimeouts
         return TfsRestTry(thisUri, () =>
         {
           var responseString = client.DownloadString(thisUri);
+          if (typeof(T) == typeof(string))
+          {
+            return (T)(object)responseString;
+          }
           var response = JsonConvert.DeserializeObject<T>(responseString);
           if (onContinuationToken != null)
           {
@@ -66,11 +77,22 @@ namespace AzDOBulkUpdateClassicReleaseStageTimeouts
         var requestString = string.Empty;
         if (data != null)
         {
-          requestString = JsonConvert.SerializeObject(data);
+          if (typeof(T) == typeof(string))
+          {
+            requestString = (string)data;
+          }
+          else
+          {
+            requestString = JsonConvert.SerializeObject(data);
+          }
         }
         return TfsRestTry(uri, () =>
         {
           var responseString = client.UploadString(uri, method, requestString);
+          if (typeof(T) == typeof(string))
+          {
+            return (T)(object)responseString;
+          }
           return JsonConvert.DeserializeObject<T>(responseString);
         });
       }
@@ -109,6 +131,11 @@ namespace AzDOBulkUpdateClassicReleaseStageTimeouts
     private static void Put(string uri, object data, string authHeader)
     {
       GeneralPushData<object>(uri, data, "PUT", "application/json", authHeader);
+    }
+
+    private static T Put<T>(string uri, object data, string authHeader)
+    {
+      return GeneralPushData<T>(uri, data, "PUT", "application/json", authHeader);
     }
 
     private static void Patch2(string uri, object data, string authHeader)
@@ -195,178 +222,48 @@ namespace AzDOBulkUpdateClassicReleaseStageTimeouts
 
     #endregion
 
-    public static repositories GetGitRepos()
+    /// <summary>
+    /// https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/list?view=azure-devops-rest-6.1
+    /// </summary>
+    public static DefinitionList GetDefinitions(string searchText, bool searchTextContainsFolderName, bool isExactNameMatch)
     {
-      return Get<repositories>(GetUrl(true, $"/_apis/git/repositories?api-version=1.0"), GetAuthorizationHeader());
-    }
-
-    public static CreateServiceEndpointResponse CreateServiceEndpoint(CreateServiceEndpointRequest request)
-    {
-      return Post<CreateServiceEndpointResponse>(GetUrl(false, $"/_apis/distributedtask/serviceendpoints?api-version=3.0-preview.1"), request, GetAuthorizationHeader());
-    }
-
-    public static CreateRepoResponse CreateRepo(CreateRepoRequest request)
-    {
-      return Post<CreateRepoResponse>(GetUrl(true, $"/_apis/git/repositories?api-version=1.0"), request, GetAuthorizationHeader());
-    }
-
-    public static CreateImportRequestResponse CreateImportRequest(string repoName, CreateImportRequestRequest request)
-    {
-      return Post<CreateImportRequestResponse>(GetUrl(false, $"/_apis/git/repositories/{repoName}/importRequests?api-version=5.0-preview.1"), request, GetAuthorizationHeader());
-    }
-
-    #region Dashboards
-
-    public static DashboardsList GetDashboards(string teamName, bool projectDashboard)
-    {
-      var teamPart = projectDashboard ? string.Empty : $"/{teamName}";
-      return Get<DashboardsList>(GetUrl(false, $"{teamPart}/_apis/dashboard/dashboards?api-version=6.0-preview.3"), GetAuthorizationHeader());
-    }
-
-    public static DashboardInfo GetDashboard(string teamName, bool projectDashboard, string dashboardId)
-    {
-      var teamPart = projectDashboard ? string.Empty : $"/{teamName}";
-      return Get<DashboardInfo>(GetUrl(false, $"{teamPart}/_apis/dashboard/dashboards/{dashboardId}?api-version=6.0-preview.3"), GetAuthorizationHeader());
-    }
-
-    public static DashboardInfo CreateDashboard(string teamName, bool projectDashboard, DashboardInfo dashboardData)
-    {
-      var teamPart = projectDashboard ? string.Empty : $"/{teamName}";
-      return Post<DashboardInfo>(GetUrl(false, $"{teamPart}/_apis/dashboard/dashboards?api-version=6.0-preview.3"), dashboardData, GetAuthorizationHeader());
-    }
-
-    public static void DeleteDashboard(string teamName, bool projectDashboard, string dashboardId)
-    {
-      var teamPart = projectDashboard ? string.Empty : $"/{teamName}";
-      Delete(GetUrl(false, $"{teamPart}/_apis/dashboard/dashboards/{dashboardId}?api-version=6.0-preview.3"), null, GetAuthorizationHeader());
-    }
-
-    #endregion
-
-    #region Work Item Queries
-
-    public static WorkItemQueries GetWorkItemQueries()
-    {
-      return Get<WorkItemQueries>(GetUrl(false, $"/_apis/wit/queries?api-version=6.0"), GetAuthorizationHeader());
-    }
-
-    public static WorkItemQuery GetWorkItemQuery(string queryPath, QueryExpand queryExpand = QueryExpand.none, int depth = 2)
-    {
-      return Get<WorkItemQuery>(GetUrl(false, $"/_apis/wit/queries/{queryPath}?api-version=6.0&$expand={queryExpand}&$depth={depth}"), GetAuthorizationHeader());
-    }
-
-    public static WorkItemQuery CreateWorkItemQueryFolder(string queryPath, string folderName)
-    {
-      return Post<WorkItemQuery>(GetUrl(false, $"/_apis/wit/queries/{queryPath}?api-version=6.0"), new CreateWorkItemQueryFolderRequest { name = folderName }, GetAuthorizationHeader());
-    }
-
-    public static WorkItemQuery CreateWorkItemQuery(string queryPath, WorkItemQuery workItemQuery)
-    {
-      workItemQuery.id = Guid.Empty.ToString();
-      return Post<WorkItemQuery>(GetUrl(false, $"/_apis/wit/queries/{queryPath}?api-version=6.0"), workItemQuery, GetAuthorizationHeader());
-    }
-
-    public static WorkItemQuery UpdateWorkItemQuery(WorkItemQuery workItemQuery)
-    {
-      workItemQuery.path += $"/{workItemQuery.name}";
-      return Patch<WorkItemQuery>(GetUrl(false, $"/_apis/wit/queries/{workItemQuery.id}?api-version=6.0"), workItemQuery, GetAuthorizationHeader());
-    }
-
-    //public static void DeleteDashboard(string teamName, string dashboardId)
-    //{
-    //  Delete(GetUrl( false, $"/{teamName}/_apis/dashboard/dashboards/{dashboardId}?api-version=6.0-preview.3"), null, GetAuthorizationHeader());
-    //}
-
-    #endregion
-
-    #region Builds
-
-    public static BuildList GetBuilds()
-    {
-      return Get<BuildList>(GetUrl(false, $"/_apis/build/builds?api-version=6.0"), GetAuthorizationHeader());
-    }
-
-    #endregion
-
-    #region Teams
-
-    public static TeamList GetTeams(string projectName)
-    {
-      var response = new TeamList();
-      Get<TeamList>(GetUrl(true, $"/_apis/projects/{projectName}/teams?api-version=6.0&$top=9999"), GetAuthorizationHeader(), (data) =>
-     {
-       response.count += data.count;
-       response.value.AddRange(data.value);
-       return true;
-     });
-      return response;
-    }
-
-    public static TeamIterationList GetTeamIterations(string teamName, bool currentOnly = false)
-    {
-      var currentOnlyFilter = currentOnly ? "&$timeframe=current" : string.Empty;
-      var response = new TeamIterationList();
-      Get<TeamIterationList>(GetUrl(false, $"/{teamName}/_apis/work/teamsettings/iterations?api-version=6.0{currentOnlyFilter}"), GetAuthorizationHeader(), (data) =>
-     {
-       response.count += data.count;
-       response.value.AddRange(data.value);
-       return true;
-     });
-      return response;
-    }
-
-    #endregion
-
-    #region Team Boards
-
-    public static TeamBoardList GetTeamBoards(string teamName)
-    {
-      var response = new TeamBoardList();
-      Get<TeamBoardList>(GetUrl(false, $"/{teamName}/_apis/work/boards?api-version=6.0"), GetAuthorizationHeader(), (data) =>
-     {
-       response.count += data.count;
-       response.value.AddRange(data.value);
-       return true;
-     });
-      return response;
-    }
-
-    public static TeamBoard GetTeamBoard(string teamName, string boardId)
-    {
-      return Get<TeamBoard>(GetUrl(false, $"/{teamName}/_apis/work/boards/{boardId}?api-version=6.0"), GetAuthorizationHeader());
-    }
-
-    #endregion
-
-    public static string GetUrl(bool excludeProject, string uriRelativeToRoot)
-    {
-      var baseUri = TeamProjectBaseUri;
-      if (excludeProject)
+      var response = new DefinitionList();
+      Get<DefinitionList>(GetUrl(ReleaseManager_Project_UrlFormat, $"/_apis/release/definitions?searchText={searchText}&$expand=environments&isExactNameMatch={isExactNameMatch}&searchTextContainsFolderName={searchTextContainsFolderName}&api-version=6.1-preview.4"), GetAuthorizationHeader(), (data) =>
       {
-        baseUri = baseUri.Remove(baseUri.LastIndexOf('/'));
-      }
+        response.count += data.count;
+        response.value.AddRange(data.value);
+        return true;
+      });
+      return response;
+    }
+
+    public static string GetDefinitionAsJson(int id)
+    {
+      return Get<string>(GetUrl(ReleaseManager_Project_UrlFormat, $"/_apis/release/definitions/{id}?api-version=6.1-preview.4"), GetAuthorizationHeader());
+    }
+
+    public static string UpdateDefinitionRawJson(int id, string jsonBody)
+    {
+      return Put<string>(GetUrl(ReleaseManager_Project_UrlFormat, $"/_apis/release/definitions/{id}?api-version=6.1-preview.4"), jsonBody, GetAuthorizationHeader());
+    }
+
+    public static string GetUrl(string urlFormat, string uriRelativeToRoot)
+    {
+      var baseUri = string.Format(urlFormat, OrgName, ProjectName);
       return $"{baseUri}{uriRelativeToRoot.Replace("//", "/")}";
     }
 
     public static string GetTeamProjectId()
     {
-      var teamProjectName = GetTeamProjectName();
-      var projects = Get<GetProjects>(GetUrl(true, $"/_apis/projects?api-version=2.0"), GetAuthorizationHeader());
+      var projects = Get<ProjectList>(GetUrl(Standard_Org_UrlFormat, $"/_apis/projects?api-version=2.0"), GetAuthorizationHeader());
       foreach (var item in projects.value)
       {
-        if (item.name.Equals(teamProjectName, StringComparison.InvariantCultureIgnoreCase))
+        if (item.name.Equals(ProjectName, StringComparison.InvariantCultureIgnoreCase))
         {
           return item.id;
         }
       }
       return null;
-    }
-
-    public static string GetTeamProjectName()
-    {
-      var baseUri = TeamProjectBaseUri;
-      var teamProjectName = baseUri.Remove(0, baseUri.LastIndexOf('/') + 1);
-      return teamProjectName;
     }
   }
 }

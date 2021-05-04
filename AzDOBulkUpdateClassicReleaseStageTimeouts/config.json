@@ -1,0 +1,26 @@
+{
+  "OrgName": "dah-dah",
+  "ProjectName": "Default",
+  "PatKey": "",
+
+  "RunMode": "0", // 0 for options
+
+  // https://docs.microsoft.com/en-us/rest/api/azure/devops/release/definitions/list?view=azure-devops-rest-6.1
+  "ListPipelines": {
+    "searchText": "",
+    "searchTextContainsFolderName": false,
+    "isExactNameMatch": false
+  },
+
+  "UpdateTimeoutFor": {
+    "TimeoutInMinutes": 5,
+    "Definitions": [ // Run List Pipelines to get a list of pipelines in the format that you can copy and paste here
+      {
+        "FullName": "\\Sample App", // https://dev.azure.com/dah-dah/Default/_release?_a=releases&view=mine&definitionId=1
+        "Environments": [
+          "Production"
+        ]
+      }
+    ]
+  }
+}
