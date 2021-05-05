@@ -47,7 +47,7 @@ jobs:
       if: startsWith(github.ref, 'refs/heads/main')
       with:
         files: package/
-        dest: package/release.zip
+        dest: package/AzDOBulkUpdateClassicReleaseStageTimeouts-${{ steps.update-version.outputs.BUILD_NUMBER }}.zip
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -59,4 +59,4 @@ jobs:
         name: Release ${{ steps.update-version.outputs.BUILD_NUMBER }}
         tag_name: ${{ steps.update-version.outputs.BUILD_NUMBER }}
         files: |
-          package/release.zip
+          package/AzDOBulkUpdateClassicReleaseStageTimeouts-${{ steps.update-version.outputs.BUILD_NUMBER }}.zip
